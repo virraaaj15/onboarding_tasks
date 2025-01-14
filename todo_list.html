@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .todo-input {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+
+        #taskInput {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        #addTaskBtn {
+            padding: 10px 15px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        #addTaskBtn:hover {
+            background-color: #45a049;
+        }
+
+        .error {
+            color: red;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        #todoList {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .todo-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .completed {
+            text-decoration: line-through;
+            color: #888;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .edit-btn, .delete-btn {
+            background-color: #008cba;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .edit-btn:hover {
+            background-color: #0073a1;
+        }
+
+        .delete-btn {
+            background-color: #ff4d4d;
+        }
+
+        .delete-btn:hover {
+            background-color: #ff3333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>To-Do List</h1>
+        <div class="todo-input">
+            <input type="text" id="taskInput" placeholder="Add a new task...">
+            <button id="addTaskBtn">Add Task</button>
+            <span class="error" id="error">Please enter an action item first!</span>
+        </div>
+        <ul id="todoList"></ul>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const taskInput = document.getElementById("taskInput");
+            const addTaskBtn = document.getElementById("addTaskBtn");
+            const todoList = document.getElementById("todoList");
+            const error = document.getElementById("error");
+
+            const loadTasks = () => {
+                const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+                tasks.forEach(task => addTask(task.text, task.completed));
+            };
+
+            const saveTasks = () => {
+                const tasks = [];
+                document.querySelectorAll(".todo-item").forEach(item => {
+                    tasks.push({
+                        text: item.querySelector(".task-text").textContent,
+                        completed: item.classList.contains("completed")
+                    });
+                });
+                localStorage.setItem("tasks", JSON.stringify(tasks));
+            };
+
+            const addTask = (text, completed = false) => {
+                if (!text.trim()) {
+                    error.style.display = "block";
+                    return;
+                }
+                error.style.display = "none";
+
+                const listItem = document.createElement("li");
+                listItem.className = `todo-item ${completed ? "completed" : ""}`;
+                listItem.innerHTML = `
+                    <span class="task-text">${text}</span>
+                    <div class="action-buttons">
+                        <button class="edit-btn">Edit</button>
+                        <button class="delete-btn">Delete</button>
+                    </div>
+                `;
+
+                // Toggle completed
+                listItem.querySelector(".task-text").addEventListener("click", () => {
+                    listItem.classList.toggle("completed");
+                    saveTasks();
+                });
+
+                // Edit task
+                listItem.querySelector(".edit-btn").addEventListener("click", () => {
+                    const newText = prompt("Edit your task:", text);
+                    if (newText && newText.trim()) {
+                        listItem.querySelector(".task-text").textContent = newText;
+                        saveTasks();
+                    }
+                });
+
+                // Delete task
+                listItem.querySelector(".delete-btn").addEventListener("click", () => {
+                    listItem.remove();
+                    saveTasks();
+                });
+
+                todoList.appendChild(listItem);
+                saveTasks();
+            };
+
+            addTaskBtn.addEventListener("click", () => {
+                addTask(taskInput.value);
+                taskInput.value = "";
+            });
+
+            taskInput.addEventListener("keypress", (e) => {
+                if (e.key === "Enter") {
+                    addTask(taskInput.value);
+                    taskInput.value = "";
+                }
+            });
+
+            loadTasks();
+        });
+    </script>
+</body>
+</html>
